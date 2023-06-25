@@ -1,9 +1,10 @@
 
+import os
+
 import uvicorn
+from app.api import background, greet
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.api import background, greet
 
 app = FastAPI(title='Converto img server')
 
@@ -23,7 +24,6 @@ for router in routers:
     app.include_router(router)
 
 
-
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="localhost", port=8080, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get('PORT', 8000)), log_level="info")
 
