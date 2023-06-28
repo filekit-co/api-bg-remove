@@ -2,9 +2,10 @@
 import os
 
 import uvicorn
-from app.api import background, greet
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.api import background, greet
 
 app = FastAPI(title='Converto img server')
 
@@ -22,6 +23,17 @@ routers = [
 ]
 for router in routers:
     app.include_router(router)
+
+
+@app.middleware("http")
+async def add_custom_header(request: Request, call_next):
+    # after process
+    response = await call_next(request)
+    # 기존 응답 헤더에 'Access-Control-Expose-Headers' 헤더를 추가합니다.
+    # CORS 정책으로 인해 Content-Disposition를 sveltekit이 못가져올 경우가 존재합니다.
+    # Content-Disposition는 파일 이름을 전달하기 위해 필요합니다.
+    response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+    return response
 
 
 if __name__ == "__main__":
