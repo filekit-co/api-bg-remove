@@ -18,7 +18,6 @@ def preprocess(file_bytes):
 def im_without_bg(file_bytes) -> Response:
     # 파일 객체에서 바이트 데이터 추출
     # preprocessed_img = preprocess(file_bytes)
-    # logging.error(preprocessed_img)
     img = remove(file_bytes, alpha_matting=True, session=new_session(IMAGE_MODEL))
     
     

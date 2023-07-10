@@ -1,9 +1,11 @@
 
+import logging
 import os
 
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_utils.timing import add_timing_middleware, record_timing
 
 from app.api import background, greet
 
@@ -16,6 +18,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+add_timing_middleware(app, record=logging.error, prefix="app", exclude="untimed")
+
 
 routers = [
     greet.router,
