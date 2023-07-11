@@ -1,3 +1,5 @@
+import logging
+
 import aiohttp
 import cv2
 import numpy as np
@@ -5,6 +7,7 @@ from asyncer import asyncify
 from fastapi import APIRouter, File, Query, Response, UploadFile, status
 from rembg import new_session, remove
 
+from app.exceptions import InternalServerError, InvalidImageUrl
 from consts import IMAGE_MODEL
 
 router = APIRouter(prefix='/bg')
@@ -38,11 +41,23 @@ async def get_index(
             default=..., description="URL of the image that has to be processed."
         ),
     ):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            file_bytes = await response.read()
-            processed_image = await asyncify(im_without_bg)(file_bytes)
-            return Response(processed_image, media_type="image/png")
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                file_bytes = await response.read()
+                processed_image = await asyncify(im_without_bg)(file_bytes)
+                return Response(processed_image, media_type="image/png")
+    except aiohttp.InvalidURL as e:
+        logging.error(e)
+        raise InvalidImageUrl(url)
+    except aiohttp.ClientError as e:
+        # aiohttp 클라이언트 에러 처리
+        # 예: 네트워크 연결 실패, 요청 시간 초과 등
+        logging.error(f"Aiohttp ClientError: {str(e)}")
+        raise e        
+    except Exception as e:
+        raise InternalServerError(str(e))
+
 
 
 
