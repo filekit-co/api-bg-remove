@@ -35,4 +35,4 @@ EXPOSE 443
 
 COPY ./src /src/
 
-CMD exec uvicorn --port $PORT --host 0.0.0.0 main:app
+CMD exec uvicorn --port $PORT --host 0.0.0.0 main:app --workers 4 
