@@ -1,16 +1,15 @@
 import logging
-import os
 
 import aiohttp
-import cv2
-import numpy as np
 from asyncer import asyncify
 from fastapi import APIRouter, File, Query, Response, UploadFile, status
+from fastapi.responses import StreamingResponse
 from rembg import remove
 
 from app.exceptions import InternalServerError, InvalidImageUrl
 from consts import IMAGE_MODEL
 from infra.u2net import get_onnx_session
+from utils import generate_chunks
 
 router = APIRouter(prefix='/bg')
 
@@ -34,7 +33,7 @@ async def get_index(
             async with session.get(url) as response:
                 file_bytes = await response.read()
                 processed_image = await asyncify(im_without_bg)(file_bytes)
-                return Response(processed_image, media_type="image/png")
+                return StreamingResponse(generate_chunks(processed_image), media_type="image/png")
     except aiohttp.InvalidURL as e:
         logging.error(e)
         raise InvalidImageUrl(url)
@@ -59,4 +58,4 @@ async def remove_background(
     ):
     file_bytes = await image.read()
     processed_image =  await asyncify(im_without_bg)(file_bytes)
-    return Response(processed_image, media_type="image/png")
+    return StreamingResponse(generate_chunks(processed_image), media_type="image/png")
