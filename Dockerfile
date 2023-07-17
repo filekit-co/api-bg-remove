@@ -34,4 +34,4 @@ COPY ./src /src/
 ENV U2NET_HOME .u2net
 RUN python -c 'from rembg.sessions.u2net import U2netSession; U2netSession.download_models()'
 # https://cloud.google.com/run/docs/tips/python#optimize_the_wsgi_server
-CMD exec gunicorn -k uvicorn.workers.UvicornWorker main:app --bind :$PORT --workers 4 --threads 8 --preload
+CMD exec gunicorn -k uvicorn.workers.UvicornWorker main:app --bind :$PORT --workers 4 --threads 8 --preload --timeout 120

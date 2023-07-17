@@ -5,7 +5,8 @@ services:
     container_name: img-api
     build: .
     volumes:
-      - ./src:/src/ # .onnx will overlapped, so need to download again in local (But I need Hot reload)
+      # .onnx will overlapped, so need to download again in local (But I need Hot reload)
+      - ./src:/src/
       - ./poetry.lock:/src/poetry.lock
       - ./pyproject.toml:/src/pyproject.toml
     command: uvicorn main:app --host=0.0.0.0 --port 8000 --reload
