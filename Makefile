@@ -4,7 +4,7 @@ dev:
 	poetry run uvicorn main:app --reload
 
 build:
-	docker compose build
+	docker compose build --no-cache
 
 up:
 	docker compose up --build
