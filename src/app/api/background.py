@@ -1,34 +1,22 @@
 import logging
+import os
 
 import aiohttp
 import cv2
 import numpy as np
 from asyncer import asyncify
 from fastapi import APIRouter, File, Query, Response, UploadFile, status
-from rembg import new_session, remove
+from rembg import remove
 
 from app.exceptions import InternalServerError, InvalidImageUrl
 from consts import IMAGE_MODEL
+from infra.u2net import get_onnx_session
 
 router = APIRouter(prefix='/bg')
 
-def preprocess(file_bytes):
-    # 파일 바이트를 numpy 배열로 변환
-    nparr = np.frombuffer(file_bytes, np.uint8)
-    # 이미지로 디코딩
-    return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
 def im_without_bg(file_bytes) -> Response:
-    # 파일 객체에서 바이트 데이터 추출
-    # preprocessed_img = preprocess(file_bytes)
-    img = remove(file_bytes, alpha_matting=True, session=new_session(IMAGE_MODEL))
-    
-    
-    # 이미지를 PNG로 인코딩하여 바이트로 변환
-    # _, img_encoded = cv2.imencode(".png", img)
-    # return img_encoded.tobytes()
+    img = remove(file_bytes, alpha_matting=True, session=get_onnx_session(IMAGE_MODEL))
     return img
-
 
 @router.get(
         path="/remove",
@@ -57,8 +45,6 @@ async def get_index(
         raise e        
     except Exception as e:
         raise InternalServerError(str(e))
-
-
 
 
 

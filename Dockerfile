@@ -15,14 +15,9 @@ COPY ./poetry.lock* ./pyproject.toml /tmp/
 
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-FROM python:3.10-slim as build-stage
+FROM python:3.10-slim
 
 WORKDIR /src
-
-# https://unstructured-io.github.io/unstructured/installing.html
-RUN apt-get update && \
-  apt-get install -y --no-install-recommends build-essential && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY --from=requirements-stage /tmp/requirements.txt /src/requirements.txt
 
@@ -33,6 +28,10 @@ RUN python -c 'from rembg.sessions.u2net import U2netSession; U2netSession.downl
 EXPOSE 80
 EXPOSE 443
 
-COPY ./src /src/
+# This equals with onnxruntime inter_op_num_threads
+# Google cloud run은 GPU 병렬 실행을 지원하지 않으므로, inter_op_num_threads를 설정하는 것은 의미가 없습니다.
+# ENV OMP_NUM_THREADS=4
 
-CMD exec uvicorn --port $PORT --host 0.0.0.0 main:app --workers 4 
+COPY ./src /src/
+# https://cloud.google.com/run/docs/tips/python#optimize_the_wsgi_server
+CMD exec gunicorn -k uvicorn.workers.UvicornWorker main:app --bind :$PORT --workers 4 --threads 8 --preload
